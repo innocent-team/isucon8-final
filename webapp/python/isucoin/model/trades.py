@@ -93,7 +93,7 @@ def has_trade_chance_by_order(db, order_id: int) -> bool:
 
 
 def _reserve_order(db, order, price: int) -> int:
-    bank = settings.get_isubank(db)
+    bank = settings.get_isubank()
     p = order.amount * price
     if order.type == "buy":
         p = -p
@@ -103,7 +103,6 @@ def _reserve_order(db, order, price: int) -> int:
     except isubank.CreditInsufficient as e:
         orders.cancel_order(db, order, "reserve_failed")
         settings.send_log(
-            db,
             order.type + ".error",
             {
                 "error": e.msg,
@@ -125,7 +124,6 @@ def _commit_reserved_order(
     )
     trade_id = cur.lastrowid
     settings.send_log(
-        db,
         "trade",
         {"trade_id": trade_id, "price": order.price, "amount": order.amount},
     )
@@ -136,7 +134,6 @@ def _commit_reserved_order(
             (trade_id, o.id),
         )
         settings.send_log(
-            db,
             o.type + ".trade",
             {
                 "order_id": o.id,
@@ -147,7 +144,7 @@ def _commit_reserved_order(
             },
         )
 
-    bank = settings.get_isubank(db)
+    bank = settings.get_isubank()
     bank.Commit(reserve_ids)
 
 
@@ -196,7 +193,7 @@ def try_trade(db, order_id: int):
         reserves.clear()
     finally:
         if reserves:
-            bank = settings.get_isubank(db)
+            bank = settings.get_isubank()
             bank.Cancel(reserves)
 
 

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import isubank
 import isulogger
+import redis
 
 
 BANK_ENDPOINT = "bank_endpoint"
@@ -9,33 +10,53 @@ BANK_APPID = "bank_appid"
 LOG_ENDPOINT = "log_endpoint"
 LOG_APPID = "log_appid"
 
-
-def set_setting(db, k: str, v: str):
-    cur = db.cursor()
-    cur.execute(
-        "INSERT INTO setting (name, val) VALUES (%s, %s) ON DUPLICATE KEY UPDATE val = VALUES(val)",
-        (k, v),
-    )
+# Global settings
+_setting = dict()
+_redisconn = None
+_redispool = None
 
 
-def get_setting(db, k: str) -> str:
-    cur = db.cursor()
-    cur.execute("SELECT val FROM setting WHERE name = %s", (k,))
-    return cur.fetchone()[0]
+def _redis():
+    # NOTE: get_dbconn() is not thread safe.  Don't use threaded server.
+    global _redisconn
+    global _redispool
+
+    if _redisconn is None:
+        _redispool = redis.ConnectionPool(
+            host='localhost',
+            port=6379,
+            db=0,
+        )
+        _redisconn = redis.StrictRedis(
+            connection_pool=_redispool
+        )
+
+    return _redisconn
 
 
-def get_isubank(db):
-    endpoint = get_setting(db, BANK_ENDPOINT)
-    appid = get_setting(db, BANK_APPID)
+def set_setting(k: str, v: str):
+    _redis().set(k, v)
+    _setting[k] = v
+
+
+def get_setting(k: str) -> str:
+    if k not in _setting:
+        _setting[k] = _redis().get(k).decode('utf-8')
+    return _setting[k]
+
+
+def get_isubank():
+    endpoint = get_setting(BANK_ENDPOINT)
+    appid = get_setting(BANK_APPID)
     return isubank.IsuBank(endpoint, appid)
 
 
-def get_logger(db):
-    endpoint = get_setting(db, LOG_ENDPOINT)
-    appid = get_setting(db, LOG_APPID)
+def get_logger():
+    endpoint = get_setting(LOG_ENDPOINT)
+    appid = get_setting(LOG_APPID)
     return isulogger.IsuLogger(endpoint, appid)
 
 
-def send_log(db, tag, v):
-    logger = get_logger(db)
+def send_log(tag, v):
+    logger = get_logger()
     logger.send(tag, v)
