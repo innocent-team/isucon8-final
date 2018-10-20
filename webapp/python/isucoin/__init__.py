@@ -213,7 +213,9 @@ def info():
         )
         orders = [Order(*r) for r in c]
         for o in orders:
-            model.fetch_order_relation(db, o)
+            o.user = users.get_user_by_id(db, o.user_id).to_json()
+            if o.trade_id:
+                o.trade = asdict(trades.get_trade_by_id(db, o.trade_id))
 
         res["traded_orders"] = orders
 
@@ -269,7 +271,9 @@ def orders():
     )
     orders = [Order(*r) for r in c]
     for o in orders:
-        model.fetch_order_relation(db, o)
+        o.user = users.get_user_by_id(db, o.user_id).to_json()
+        if o.trade_id:
+            o.trade = asdict(trades.get_trade_by_id(db, o.trade_id))
 
     return jsonify(orders)
 

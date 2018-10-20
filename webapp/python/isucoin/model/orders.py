@@ -94,12 +94,6 @@ def get_open_order_by_id(db, id: int) -> Order:
     return order
 
 
-def fetch_order_relation(db, order: Order):
-    order.user = users.get_user_by_id(db, order.user_id).to_json()
-    if order.trade_id:
-        order.trade = asdict(trades.get_trade_by_id(db, order.trade_id))
-
-
 def add_order(db, ot: str, user_id: int, amount: int, price: int) -> Order:
     if amount <= 0 or price <= 0:
         raise ValueError
