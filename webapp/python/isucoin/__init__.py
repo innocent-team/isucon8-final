@@ -207,7 +207,7 @@ def signin():
     except model.UserNotFound as e:
         redis_key = f'signin_fail_{bank_id}'
         fail_count = int(_redis().incr(redis_key))
-        if fail_count >= 5:
+        if fail_count > 5:
             return error_json(403, 'banned')
         # TODO: 失敗が多いときに403を返すBanの仕様に対応
         return error_json(404, e.msg)
