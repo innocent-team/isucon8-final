@@ -100,7 +100,7 @@ def send_bulk():
     res = requests.post(url, data=body, headers=headers)
     res.raise_for_status()
 
-set_interval(send_bulk, 8)
+set_interval(send_bulk, 2)
 
 @app.route("/send", methods=("POST",))
 def send():
