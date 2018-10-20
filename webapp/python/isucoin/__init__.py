@@ -10,6 +10,7 @@ import json
 import time
 import flask
 import MySQLdb
+import urllib.request
 
 from dataclasses import dataclass, asdict
 from . import model
@@ -131,11 +132,18 @@ def initialize():
     with transaction() as db:
         model.init_benchmark(db)
 
-        for k in ("bank_endpoint", "bank_appid", "log_endpoint", "log_appid"):
-            v = flask.request.form.get(k)
-            model.set_setting(k, v)
+    for server in ['isucon1', 'isucon2', 'isucon4']:
+        print(f"send request to {server}")
+        urllib.request.urlopen(f"http://{server}:5000/initialize_redis").read()
+    
     return jsonify({})
 
+@app.route("/initialize_redis")
+def initialize_redis():
+    for k in ("bank_endpoint", "bank_appid", "log_endpoint", "log_appid"):
+        v = flask.request.form.get(k)
+        model.set_setting(k, v)
+    return jsonify({})
 
 @app.route("/signup", methods=("POST",))
 def signup():
