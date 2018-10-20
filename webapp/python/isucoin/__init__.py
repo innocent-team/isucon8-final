@@ -211,7 +211,7 @@ def info():
             "SELECT * FROM orders WHERE user_id = %s AND trade_id IS NOT NULL AND trade_id > %s ORDER BY created_at ASC",
             (user.id, last_trade_id),
         )
-        orders = [Order(*r) for r in c]
+        orders = [model.Order(*r) for r in c]
         for o in orders:
             o.user = users.get_user_by_id(db, o.user_id).to_json()
             if o.trade_id:
@@ -269,7 +269,7 @@ def orders():
         "SELECT * FROM orders WHERE user_id = %s AND (closed_at IS NULL OR trade_id IS NOT NULL) ORDER BY created_at ASC",
         (user.id,),
     )
-    orders = [Order(*r) for r in c]
+    orders = [model.Order(*r) for r in c]
     for o in orders:
         o.user = users.get_user_by_id(db, o.user_id).to_json()
         if o.trade_id:
