@@ -291,15 +291,15 @@ def orders():
     c.execute("""
         SELECT
             o.*,
-            user.id as user_id,
-            user.bank_id as user_bank_id,
-            user.name as user_name,
-            user.password as user_password,
-            user.created_at as user_created_at,
-            trade.id as trade_id,
-            trade.amount as trade_amount,
-            trade.price as trade_price,
-            trade.created_at as trade_created_at
+            u.id as user_id,
+            u.bank_id as user_bank_id,
+            u.name as user_name,
+            u.password as user_password,
+            u.created_at as user_created_at,
+            t.id as trade_id,
+            t.amount as trade_amount,
+            t.price as trade_price,
+            t.created_at as trade_created_at
         FROM orders o
         INNER JOIN user u ON u.id = o.user_id
         LEFT JOIN trade t ON t.id = o.trade_id
