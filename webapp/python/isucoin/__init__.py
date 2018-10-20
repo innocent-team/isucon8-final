@@ -276,7 +276,7 @@ def info():
         res["highest_buy_price"] = highest_buy_order.price
 
     # TODO: trueにするとシェアボタンが有効になるが、アクセスが増えてヤバイので一旦falseにしておく
-    res["enable_share"] = True
+    res["enable_share"] = False
 
     resp = jsonify(res)
     return resp
