@@ -135,6 +135,7 @@ def initialize():
     for server in ['isucon1', 'isucon2', 'isucon4']:
         print(f"send request to {server}")
         requests.post(f"http://{server}:5000/initialize_redis", data=flask.request.form)
+    requests.post("http://isucon1:5005/initialize")
     
     return jsonify({})
 

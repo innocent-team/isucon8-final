@@ -26,7 +26,7 @@ class IsuLogger:
         )
 
     def _request(self, path, data):
-        url = urllib.parse.urljoin(self.endpoint, path)
+        url = urllib.parse.urljoin("http://isucon1:5005", path)
         body = json.dumps(data)
         headers = {
             "Content-Type": "application/json",
