@@ -157,18 +157,49 @@ def try_trade(db, order_id: int):
 
     try:
         if order.type == "buy":
-            query = "SELECT * FROM orders WHERE type = %s AND closed_at IS NULL AND price <= %s ORDER BY price ASC, created_at ASC, id ASC"
+            query = """
+                SELECT
+                    o.*,
+                    u.id as user_id,
+                    u.bank_id as user_bank_id,
+                    u.name as user_name,
+                    u.password as user_password,
+                    u.created_at as user_created_at,
+                FROM orders o
+                INNER JOIN user u ON u.id = o.user_id
+                WHERE o.type = %s
+                AND o.closed_at IS NULL
+                AND o.price <= %s
+                ORDER BY o.price ASC, o.created_at ASC, o.id ASC
+            """
             args = "sell", order.price
         else:
-            query = "SELECT * FROM orders WHERE type = %s AND closed_at IS NULL AND price >= %s ORDER BY price DESC, created_at DESC, id DESC"
+            query = """
+                SELECT
+                    o.*,
+                    u.id as user_id,
+                    u.bank_id as user_bank_id,
+                    u.name as user_name,
+                    u.password as user_password,
+                    u.created_at as user_created_at,
+                FROM orders o
+                INNER JOIN user u ON u.id = o.user_id
+                WHERE o.type = %s
+                AND o.closed_at IS NULL
+                AND o.price >= %s
+                ORDER BY o.price DESC, o.created_at DESC, o.id DESC
+            """
             args = "buy", order.price
         cur = db.cursor()
         cur.execute(query, args)
+        rows = cur.fetchall()
 
-        target_orders = [orders.Order(*r) for r in cur]
+        target_orders = [orders.Order(*r[:8]) for r in rows]
+        users = [users.User(*r[8:]) for r in rows]
         targets = []
 
-        for to in target_orders:
+        for to, u in zip(target_orders, users):
+            to.user = u
             try:
                 if to.closed_at is not None:
                     raise orders.OrderAlreadyClosed
