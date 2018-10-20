@@ -190,7 +190,14 @@ func tryTrade(tx *sql.Tx, orderID int64) error {
 	var targetOrders []*Order
 	switch order.Type {
 	case OrderTypeBuy:
-		targetOrders, err = scanOrders(tx.Query(`SELECT * FROM orders WHERE type = ? AND closed_at IS NULL AND price <= ? ORDER BY price ASC, created_at ASC, id ASC`, OrderTypeSell, order.Price))
+		targetOrders, err = scanOrders(tx.Query(`
+        SELECT *
+        FROM orders
+        WHERE type = ?
+        AND closed_at IS NULL
+        AND price <= ?
+        ORDER BY price ASC, created_at ASC, id ASC`,
+    OrderTypeSell, order.Price))
 	case OrderTypeSell:
 		targetOrders, err = scanOrders(tx.Query(`SELECT * FROM orders WHERE type = ? AND closed_at IS NULL AND price >= ? ORDER BY price DESC, created_at ASC, id ASC`, OrderTypeBuy, order.Price))
 	}
@@ -202,7 +209,8 @@ func tryTrade(tx *sql.Tx, orderID int64) error {
 	}
 
 	for _, to := range targetOrders {
-		to, err = getOpenOrderByID(tx, to.ID)
+	  to, err = scanOrder(tx.Query("SELECT * FROM orders WHERE id = ?", to.ID))
+		// to, err = getOpenOrderByID(tx, to.ID) #N+1
 		if err != nil {
 			if err == ErrOrderAlreadyClosed {
 				continue

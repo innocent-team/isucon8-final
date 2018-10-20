@@ -395,6 +395,8 @@ func (h *Handler) LoopRunTrade(db *sql.DB) {
     err := model.RunTrade(db)
     if err != nil {
       log.Printf("[WARN] RunTrade Failed. err:%s", err)
+      // #TODO 注文が足りないのでエラーになっている
+      // busy loopが発生するのでsleepを入れる?
     }
   }
 }
