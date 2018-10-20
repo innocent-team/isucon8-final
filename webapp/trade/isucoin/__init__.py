@@ -24,7 +24,7 @@ dbpass = os.environ.get("ISU_DB_PASSWORD", "")
 dbname = os.environ.get("ISU_DB_NAME", "isucoin")
 public = os.environ.get("ISU_PUBLIC_DIR", "public")
 
-app = flask.Flask(__name__, static_url_path="", static_folder=public)
+app = flask.Flask(__name__)
 app.secret_key = "tonymoris"
 
 # ISUCON用初期データの基準時間です
@@ -81,53 +81,22 @@ def jsonify(*args, **kwargs):
     )
 
 
-def error_json(code: int, msg):
-    resp = jsonify(code=code, err=str(msg))
-    resp.headers["X-Content-Type-Options"] = "nosniff"
-    resp.status_code = code
-    return resp
+import threading
+
+def set_interval(func, sec):
+    def func_wrapper():
+        set_interval(func, sec)
+        func()
+    t = threading.Timer(sec, func_wrapper)
+    t.start()
+    return t
 
 
-@app.errorhandler(Exception)
-def errohandler(err):
-    app.logger.exception("FAIL")
-    return error_json(500, err)
+def start_trading():
+    res = model.trades.run_trade() 
 
-
-@app.before_request
-def before_request():
-    user_id = flask.session.get("user_id")
-    if user_id is None:
-        flask.g.current_user = None
-        return
-
-    user = model.get_user_by_id(get_dbconn(), user_id)
-    if user is None:
-        flask.session.clear()
-        return error_json(404, "セッションが切断されました")
-
-    flask.g.current_user = user
-
-
-@contextlib.contextmanager
-def transaction():
-    conn = get_dbconn()
-    conn.begin()
-    try:
-        yield conn
-    except:
-        conn.rollback()
-        raise
-    else:
-        conn.commit()
+set_interval(start_trading, 0.1)
 
 @app.route("/initialize", methods=("POST",))
 def initialize():
-    with transaction() as db:
-        model.init_benchmark(db)
-
-    for server in ['isucon1', 'isucon2', 'isucon4']:
-        print(f"send request to {server}")
-        urllib.request.urlopen(f"http://{server}:5000/initialize_redis").read()
-    
     return jsonify({})
