@@ -207,8 +207,37 @@ def info():
     user = flask.g.current_user
     if user:
         orders = model.get_orders_by_userid_and_lasttradeid(db, user.id, last_trade_id)
-        for o in orders:
-            model.fetch_order_relation(db, o)
+        c = db.cursor()
+        c.execute("""
+        SELECT
+            orders.*,
+            user.id as user_id,
+            user.bank_id as user_bank_id,
+            user.name as user_name,
+            user.password as user_password,
+            user.created_at as user_created_at,
+            trade.id as trade_id,
+            trade.amount as trade_amount,
+            trade.price as trade_price,
+            trade.created_at as trade_created_at
+        FROM orders
+        INNER JOIN user ON user.id = orders.user_id
+        LEFT JOIN trade ON trade.id = orders.trade_id
+        WHERE orders.user_id = %s
+        AND orders.trade_id IS NOT NULL
+        AND orders.trade_id > %s
+        ORDER BY orders.created_at ASC
+        """,
+            (user.id, last_trade_id),
+        )
+        rows = c.fetchall()
+        orders = [model.Order(*r[:8]) for r in rows]
+        users = [model.User(*r[8:13]) for r in rows]
+        trades = [r[13] and model.Trade(*r[13:]) for r in rows]
+        for o, u, t in zip(orders, users, trades):
+            o.user = u.to_json()
+            if o.trade_id:
+                o.trade = asdict(t)
 
         res["traded_orders"] = orders
 
