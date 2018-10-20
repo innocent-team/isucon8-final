@@ -41,7 +41,9 @@ def set_setting(k: str, v: str):
 
 def get_setting(k: str) -> str:
     if k not in _setting:
-        _setting[k] = _redis().get(k)
+        _setting[k] = str(_redis().get(k))
+        print(type(_setting[k]))
+        print(_setting[k])
     return _setting[k]
 
 
