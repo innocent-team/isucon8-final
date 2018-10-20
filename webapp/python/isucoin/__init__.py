@@ -136,7 +136,6 @@ def initialize():
         print(f"send request to {server}")
         requests.post(f"http://{server}:5000/initialize_redis", data=flask.request.form)
     requests.post("http://isucon1:5005/initialize")
-    requests.post("http://isucon4:5006/initialize")
     
     return jsonify({})
 
@@ -342,7 +341,10 @@ def add_order():
     db = get_dbconn()
     trade_chance = model.has_trade_chance_by_order(db, order.id)
     if trade_chance:
-        requests.post("http://isucon4:5006/trade")
+        try:
+            model.run_trade(db)
+        except Exception:  # トレードに失敗してもエラーにはしない
+            app.logger.exception("run_trade failed")
 
     return jsonify(id=order.id)
 
