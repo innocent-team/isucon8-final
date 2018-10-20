@@ -197,7 +197,7 @@ def info():
         except ValueError as e:
             app.logger.exception(f"failed to parse cursor ({cursor!r})")
         if last_trade_id > 0:
-            trade = model.get_trade_by_id(db, last_trade_id)
+            trade = model._get_trade(db, "SELECT * FROM trade WHERE id = %s", last_trade_id)
             if trade:
                 lt = trade.created_at
 
@@ -215,7 +215,7 @@ def info():
         for o in orders:
             o.user = users.get_user_by_id(db, o.user_id).to_json()
             if o.trade_id:
-                o.trade = asdict(trades.get_trade_by_id(db, o.trade_id))
+                o.trade = asdict(trades._get_trade(db, "SELECT * FROM trade WHERE id = %s", o.trade_id))
 
         res["traded_orders"] = orders
 
@@ -273,7 +273,7 @@ def orders():
     for o in orders:
         o.user = users.get_user_by_id(db, o.user_id).to_json()
         if o.trade_id:
-            o.trade = asdict(trades.get_trade_by_id(db, o.trade_id))
+            o.trade = asdict(trades._get_trade(db, "SELECT * FROM trade WHERE id = %s", o.trade_id))
 
     return jsonify(orders)
 
