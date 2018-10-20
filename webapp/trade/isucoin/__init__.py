@@ -93,7 +93,9 @@ def set_interval(func, sec):
 
 
 def start_trading():
-    res = model.trades.run_trade() 
+    print("Start Trading")
+    db = get_dbconn()
+    res = model.trades.run_trade(db) 
 
 set_interval(start_trading, 0.1)
 
