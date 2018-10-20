@@ -201,7 +201,7 @@ def info():
             if trade:
                 lt = trade.created_at
 
-    latest_trade = model.get_latest_trade(db)
+    latest_trade = model._get_trade(db, "SELECT * FROM trade ORDER BY id DESC")
     res["cursor"] = latest_trade.id
 
     user = flask.g.current_user

@@ -43,10 +43,6 @@ def _get_trade(db, query, *args):
     return Trade(*row)
 
 
-def get_latest_trade(db) -> typing.Optional[Trade]:
-    return _get_trade(db, "SELECT * FROM trade ORDER BY id DESC")
-
-
 def get_candlestic_data(db, mt: datetime, tf: str) -> typing.List[CandlestickData]:
     query = """
         SELECT m.t, a.price, b.price, m.h, m.l
