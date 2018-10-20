@@ -11,7 +11,7 @@ WorkingDirectory=/home/isucon/isucon2018-final/webapp/python
 
 EnvironmentFile = /home/isucon/isucon2018-final/env
 ExecStartPre = /usr/local/bin/pipenv install
-ExecStart = /usr/local/bin/pipenv run gunicorn -w5 isucoin:app -b :5000 --access-logfile=-
+ExecStart = /usr/local/bin/pipenv run gunicorn -w10 isucoin:app -b :5000 --access-logfile=-
 
 Restart   = always
 Type      = simple
