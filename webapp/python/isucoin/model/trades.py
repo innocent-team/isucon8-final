@@ -164,7 +164,7 @@ def try_trade(db, order_id: int):
                     u.bank_id as user_bank_id,
                     u.name as user_name,
                     u.password as user_password,
-                    u.created_at as user_created_at,
+                    u.created_at as user_created_at
                 FROM orders o
                 INNER JOIN user u ON u.id = o.user_id
                 WHERE o.type = %s
@@ -181,7 +181,7 @@ def try_trade(db, order_id: int):
                     u.bank_id as user_bank_id,
                     u.name as user_name,
                     u.password as user_password,
-                    u.created_at as user_created_at,
+                    u.created_at as user_created_at
                 FROM orders o
                 INNER JOIN user u ON u.id = o.user_id
                 WHERE o.type = %s
