@@ -85,16 +85,13 @@ def set_interval(func, sec):
     t.start()
     return t
 
-
 queue = []
-
 def send_bulk():
-    print("SEND BULK")
     endpoint = get_setting(LOG_ENDPOINT)
     appid = get_setting(LOG_APPID)
     url = urllib.parse.urljoin(endpoint, "/send_bulk")
     body = json.dumps(queue)
-    print(body)
+    print("SEND BULK size: " + str(len(body)))
     queue.clear()
     headers = {
         "Content-Type": "application/json",
@@ -103,17 +100,15 @@ def send_bulk():
     res = requests.post(url, data=body, headers=headers)
     res.raise_for_status()
 
-send_bulk()
 set_interval(send_bulk, 8)
 
 @app.route("/send", methods=("POST",))
 def send():
     queue.append(flask.request.json)
-    print(flask.request.json)
-    return jsonify({"Status": "OK"})
+    return jsonify({})
 
 @app.route("/initialize", methods=("POST",))
 def initialize():
-    queue = []
+    queue.clear()
     return jsonify({})
 
