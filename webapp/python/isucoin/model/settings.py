@@ -41,9 +41,7 @@ def set_setting(k: str, v: str):
 
 def get_setting(k: str) -> str:
     if k not in _setting:
-        _setting[k] = str(_redis().get(k))
-        print(type(_setting[k]))
-        print(_setting[k])
+        _setting[k] = _redis().get(k).encode('utf-8')
     return _setting[k]
 
 
