@@ -86,37 +86,12 @@ def _get_one_order(db, query, *args):
     return Order(*row)
 
 
-def get_order_by_id(db, id: int) -> Order:
-    return _get_one_order(db, "SELECT * FROM orders WHERE id = %s", id)
-
-
-def get_order_by_id_with_lock(db, id: int) -> Order:
+def get_open_order_by_id(db, id: int) -> Order:
     order = _get_one_order(db, "SELECT * FROM orders WHERE id = %s FOR UPDATE", id)
     order.user = users.get_user_by_id_with_lock(db, order.user_id)
-    return order
-
-
-def get_open_order_by_id(db, id: int) -> Order:
-    order = get_order_by_id_with_lock(db, id)
     if order.closed_at is not None:
         raise OrderAlreadyClosed
     return order
-
-
-def get_lowest_sell_order(db) -> Order:
-    return _get_one_order(
-        db,
-        "SELECT * FROM orders WHERE type = %s AND closed_at IS NULL ORDER BY price ASC, created_at ASC LIMIT 1",
-        "sell",
-    )
-
-
-def get_highest_buy_order(db) -> Order:
-    return _get_one_order(
-        db,
-        "SELECT * FROM orders WHERE type = %s AND closed_at IS NULL ORDER BY price DESC, created_at ASC LIMIT 1",
-        "buy",
-    )
 
 
 def fetch_order_relation(db, order: Order):
@@ -161,12 +136,13 @@ def add_order(db, ot: str, user_id: int, amount: int, price: int) -> Order:
         {"order_id": id, "user_id": user_id, "amount": amount, "price": price},
     )
 
-    return get_order_by_id(db, id)
+    return _get_one_order(db, "SELECT * FROM orders WHERE id = %s", id)
 
 
 def delete_order(db, user_id: int, order_id: int, reason: str):
     user = users.get_user_by_id_with_lock(db, user_id)
-    order = get_order_by_id_with_lock(db, order_id)
+    order = _get_one_order(db, "SELECT * FROM orders WHERE id = %s FOR UPDATE", order_id)
+    order.user = users.get_user_by_id_with_lock(db, order.user_id)
 
     if order is None:
         raise OrderNotFound

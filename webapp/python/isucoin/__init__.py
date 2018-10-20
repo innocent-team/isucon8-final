@@ -206,7 +206,12 @@ def info():
 
     user = flask.g.current_user
     if user:
-        orders = model.get_orders_by_userid_and_lasttradeid(db, user.id, last_trade_id)
+        c = db.cursor()
+        c.execute(
+            "SELECT * FROM orders WHERE user_id = %s AND trade_id IS NOT NULL AND trade_id > %s ORDER BY created_at ASC",
+            (user.id, last_trade_id),
+        )
+        orders = [Order(*r) for r in c]
         for o in orders:
             model.fetch_order_relation(db, o)
 
@@ -227,11 +232,19 @@ def info():
         from_t = lt.replace(minute=0, second=0, microsecond=0)
     res["chart_by_hour"] = model.get_candlestic_data(db, from_t, "%Y-%m-%d %H:00:00")
 
-    lowest_sell_order = model.get_lowest_sell_order(db)
+    lowest_sell_order = _get_one_order(
+        db,
+        "SELECT * FROM orders WHERE type = %s AND closed_at IS NULL ORDER BY price ASC, created_at ASC LIMIT 1",
+        "sell",
+    )
     if lowest_sell_order:
         res["lowest_sell_price"] = lowest_sell_order.price
 
-    highest_buy_order = model.get_highest_buy_order(db)
+    highest_buy_order = model._get_one_order(
+        db,
+        "SELECT * FROM orders WHERE type = %s AND closed_at IS NULL ORDER BY price DESC, created_at ASC LIMIT 1",
+        "buy",
+    )
     if highest_buy_order:
         res["highest_buy_price"] = highest_buy_order.price
 
@@ -249,7 +262,12 @@ def orders():
         return error_json(401, "Not authenticated")
 
     db = get_dbconn()
-    orders = model.get_orders_by_userid(db, user.id)
+    c = db.cursor()
+    c.execute(
+        "SELECT * FROM orders WHERE user_id = %s AND (closed_at IS NULL OR trade_id IS NOT NULL) ORDER BY created_at ASC",
+        (user.id,),
+    )
+    orders = [Order(*r) for r in c]
     for o in orders:
         model.fetch_order_relation(db, o)
 

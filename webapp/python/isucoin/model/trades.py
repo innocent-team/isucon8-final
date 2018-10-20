@@ -75,12 +75,20 @@ def get_candlestic_data(db, mt: datetime, tf: str) -> typing.List[CandlestickDat
 
 
 def has_trade_chance_by_order(db, order_id: int) -> bool:
-    order = orders.get_order_by_id(db, order_id)
+    order = orders._get_one_order(db, "SELECT * FROM orders WHERE id = %s", id)
 
-    lowest = orders.get_lowest_sell_order(db)
+    lowest = orders._get_one_order(
+        db,
+        "SELECT * FROM orders WHERE type = %s AND closed_at IS NULL ORDER BY price ASC, created_at ASC LIMIT 1",
+        "sell",
+    )
     if not lowest:
         return False
-    highest = orders.get_highest_buy_order(db)
+    highest = orders._get_one_order(
+        db,
+        "SELECT * FROM orders WHERE type = %s AND closed_at IS NULL ORDER BY price DESC, created_at ASC LIMIT 1",
+        "buy",
+    )
     if not highest:
         return False
 
@@ -201,12 +209,20 @@ def try_trade(db, order_id: int):
 
 
 def run_trade(db):
-    lowest_sell_order = orders.get_lowest_sell_order(db)
+    lowest_sell_order = _get_one_order(
+        db,
+        "SELECT * FROM orders WHERE type = %s AND closed_at IS NULL ORDER BY price ASC, created_at ASC LIMIT 1",
+        "sell",
+    )
     if lowest_sell_order is None:
         # 売り注文が無いため成立しない
         return
 
-    highest_buy_order = orders.get_highest_buy_order(db)
+    highest_buy_order = orders._get_one_order(
+        db,
+        "SELECT * FROM orders WHERE type = %s AND closed_at IS NULL ORDER BY price DESC, created_at ASC LIMIT 1",
+        "buy",
+    )
     if highest_buy_order is None:
         # 買い注文が無いため成立しない
         return
