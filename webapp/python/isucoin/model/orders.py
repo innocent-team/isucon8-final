@@ -57,15 +57,6 @@ class Order:
         return data
 
 
-def get_orders_by_userid(db, user_id: int) -> typing.List[Order]:
-    c = db.cursor()
-    c.execute(
-        "SELECT * FROM orders WHERE user_id = %s AND (closed_at IS NULL OR trade_id IS NOT NULL) ORDER BY created_at ASC",
-        (user_id,),
-    )
-    return [Order(*r) for r in c]
-
-
 def get_orders_by_userid_and_lasttradeid(
     db, user_id: int, trade_id: int
 ) -> typing.List[Order]:
