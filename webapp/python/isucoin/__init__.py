@@ -287,9 +287,35 @@ def orders():
         return error_json(401, "Not authenticated")
 
     db = get_dbconn()
-    orders = model.get_orders_by_userid(db, user.id)
-    for o in orders:
-        model.fetch_order_relation(db, o)
+    c = db.cursor()
+    c.execute("""
+        SELECT
+            o.*,
+            user.id as user_id,
+            user.bank_id as user_bank_id,
+            user.name as user_name,
+            user.password as user_password,
+            user.created_at as user_created_at,
+            trade.id as trade_id,
+            trade.amount as trade_amount,
+            trade.price as trade_price,
+            trade.created_at as trade_created_at
+        FROM orders o
+        INNER JOIN user u ON u.id = o.user_id
+        LEFT JOIN trade t ON t.id = o.trade_id
+        WHERE o.user_id = %s
+        AND (o.closed_at IS NULL OR o.trade_id IS NOT NULL)
+        ORDER BY o.created_at ASC
+    """, (user.id,),
+    )
+    rows = c.fetchall()
+    orders = [model.Order(*r[:8]) for r in rows]
+    users = [model.User(*r[8:13]) for r in rows]
+    trades = [r[13] and model.Trade(*r[13:]) for r in rows]
+    for o, u, t in zip(orders, users, trades):
+        o.user = u.to_json()
+        if o.trade_id:
+            o.trade = asdict(t)
 
     return jsonify(orders)
 
