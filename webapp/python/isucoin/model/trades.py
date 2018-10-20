@@ -4,7 +4,7 @@ from datetime import datetime
 from dataclasses import dataclass, asdict
 import isubank
 
-from . import settings, orders
+from . import settings, orders, users
 
 
 class NoOrderForTrade(Exception):
@@ -195,10 +195,10 @@ def try_trade(db, order_id: int):
         rows = cur.fetchall()
 
         target_orders = [orders.Order(*r[:8]) for r in rows]
-        users = [users.User(*r[8:]) for r in rows]
+        us = [users.User(*r[8:]) for r in rows]
         targets = []
 
-        for to, u in zip(target_orders, users):
+        for to, u in zip(target_orders, us):
             to.user = u
             try:
                 if to.closed_at is not None:
