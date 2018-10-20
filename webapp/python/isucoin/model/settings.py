@@ -11,7 +11,6 @@ LOG_ENDPOINT = "log_endpoint"
 LOG_APPID = "log_appid"
 
 # Global settings
-_setting = dict()
 _redisconn = None
 _redispool = None
 
@@ -36,13 +35,10 @@ def _redis():
 
 def set_setting(k: str, v: str):
     _redis().set(k, v)
-    _setting[k] = v
 
 
 def get_setting(k: str) -> str:
-    if k not in _setting:
-        _setting[k] = _redis().get(k).decode('utf-8')
-    return _setting[k]
+    return _redis().get(k).decode('utf-8')
 
 
 def get_isubank():
