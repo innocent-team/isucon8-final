@@ -91,14 +91,28 @@ def set_interval(func, sec):
     t.start()
     return t
 
+queue = []
+def seek_queue():
+    if len(queue) > 0:
+        queue.pop()
+        start_trading()
+
+set_interval(seek_queue, 0.1)
 
 def start_trading():
     print("Start Trading")
     db = get_dbconn()
-    res = model.trades.run_trade(db) 
-
-set_interval(start_trading, 0.1)
+    try:
+         model.trades.run_trade(db) 
+    except Exception:  # トレードに失敗してもエラーにはしない
+        print("Trade Error")
 
 @app.route("/initialize", methods=("POST",))
 def initialize():
+    queue.clear()
+    return jsonify({})
+
+@app.route("/trade", methods=("POST",))
+def trade():
+    queue.append(True)
     return jsonify({})
