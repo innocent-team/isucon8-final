@@ -11,6 +11,7 @@ import time
 import flask
 import MySQLdb
 import requests
+import redis
 
 from dataclasses import dataclass, asdict
 from . import model
