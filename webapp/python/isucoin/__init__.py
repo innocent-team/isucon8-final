@@ -342,7 +342,7 @@ def add_order():
     db = get_dbconn()
     trade_chance = model.has_trade_chance_by_order(db, order.id)
     if trade_chance:
-        request.post("http://isucon4:5006/trade")
+        requests.post("http://isucon4:5006/trade")
 
     return jsonify(id=order.id)
 
