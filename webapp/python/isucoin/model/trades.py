@@ -170,7 +170,8 @@ def try_trade(db, order_id: int):
 
         for to in target_orders:
             try:
-                to = orders.get_open_order_by_id(db, to.id)
+                if to.closed_at is not None:
+                    raise get_open_order_by_id
             except orders.OrderAlreadyClosed:
                 continue
             if to.amount > rest_amount:
