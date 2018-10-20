@@ -168,6 +168,29 @@ def signup():
     return jsonify({})
 
 
+# Global settings
+_redisconn = None
+_redispool = None
+
+
+def _redis():
+    # NOTE: get_dbconn() is not thread safe.  Don't use threaded server.
+    global _redisconn
+    global _redispool
+
+    if _redisconn is None:
+        _redispool = redis.ConnectionPool(
+            host='localhost',
+            port=6379,
+            db=0,
+        )
+        _redisconn = redis.StrictRedis(
+            connection_pool=_redispool
+        )
+
+    return _redisconn
+
+
 @app.route("/signin", methods=("POST",))
 def signin():
     req = flask.request
@@ -181,6 +204,10 @@ def signin():
     try:
         user = model.login(db, bank_id, password)
     except model.UserNotFound as e:
+        redis_key = f'signin_fail_{bank_id}'
+        fail_count = int(_redis().incr(redis_key))
+        if fail_count >= 5:
+            return error_json(403, 'banned')
         # TODO: 失敗が多いときに403を返すBanの仕様に対応
         return error_json(404, e.msg)
 
