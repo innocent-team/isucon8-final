@@ -142,6 +142,7 @@ def initialize():
 
 @app.route("/initialize_redis", methods=("POST",))
 def initialize_redis():
+    get_dbconn().ping(True)
     for k in ("bank_endpoint", "bank_appid", "log_endpoint", "log_appid"):
         v = flask.request.form.get(k)
         model.set_setting(k, v)
