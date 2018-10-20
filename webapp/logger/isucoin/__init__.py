@@ -109,6 +109,7 @@ def send():
 
 @app.route("/initialize", methods=("POST",))
 def initialize():
+    print("Initalize Logger")
     queue.clear()
     return jsonify({})
 
